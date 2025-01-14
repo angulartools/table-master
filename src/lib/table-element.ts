@@ -1,5 +1,4 @@
 import { UntypedFormGroup } from '@angular/forms';
-import cloneDeep from 'lodash';
 
 import { TableDataSource } from './table-data-source';
 
@@ -26,7 +25,7 @@ export abstract class TableElement<T> {
   }
 
   startEdit(): void {
-    this.originalData = cloneDeep(this.currentData);
+    this.originalData = Object.assign({}, this.currentData); //
     this.editing = true;
   }
 
