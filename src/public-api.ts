@@ -9,3 +9,4 @@ export * from './lib/default-validator.service';
 export * from './lib/table-element-reactive-forms';
 export * from './lib/table-element-template-driven';
 export * from './lib/table-element.factory';
+export * from './lib/table-paginator/table-paginator.component';

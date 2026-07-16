@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { UntypedFormGroup } from '@angular/forms';
 import { TableDataValidator } from './table-data.validator.service';
 
 
-@Injectable()
+@Service()
 export class DefaultValidatorService implements TableDataValidator {
 
   getRowValidator(): UntypedFormGroup {

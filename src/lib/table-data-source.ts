@@ -1,7 +1,5 @@
 import { DataSource } from '@angular/cdk/collections';
-
 import { BehaviorSubject, Subject, Observable } from 'rxjs';
-
 import { TableElementFactory } from './table-element.factory';
 import { TableElement } from './table-element';
 import { DefaultValidatorService } from './default-validator.service';
@@ -191,7 +189,7 @@ export class TableDataSource<T> extends DataSource<TableElement<T>> {
    * @param source
    */
   protected existsNewElement(source: TableElement<T>[]): boolean {
-      return !(source.length === 0 || source[this.getNewRowIndex(source)].id > -1);
+    return !(source.length === 0 || source[this.getNewRowIndex(source)].id > -1);
   }
 
   /**
@@ -266,8 +264,8 @@ export class TableDataSource<T> extends DataSource<TableElement<T>> {
     return rows
       .filter(row => row.id !== -1)
       .map<T>((row) => {
-      return row.originalData ? row.originalData : row.currentData;
-    });
+        return row.originalData ? row.originalData : row.currentData;
+      });
   }
 
   /**

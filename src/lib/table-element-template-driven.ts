@@ -18,19 +18,19 @@ export class TableElementTemplateDriven<T> extends TableElement<T> {
 
   set validator(value: any) { }
 
-  get currentData(): T {
+  override get currentData(): T {
     return this._currentData;
   }
 
-  set currentData(data: T) {
+  override set currentData(data: T) {
     this._currentData = data;
   }
 
-  get editing(): boolean {
+  override get editing(): boolean {
     return this._editing;
   }
 
-  set editing(value: boolean) {
+  override set editing(value: boolean) {
     this._editing = value;
   }
 

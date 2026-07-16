@@ -10,19 +10,19 @@ export class TableElementReactiveForms<T> extends TableElement<T> {
   source: TableDataSource<T>;
   validator: UntypedFormGroup;
 
-  get currentData(): T {
+  override get currentData(): T {
     return this.validator.getRawValue();
   }
 
-  set currentData(data: T) {
+  override set currentData(data: T) {
     this.validator.patchValue(data);
   }
 
-  get editing(): boolean {
+  override get editing(): boolean {
     return this.validator.enabled;
   }
 
-  set editing(value: boolean) {
+  override set editing(value: boolean) {
     if (value) {
       this.validator.enable();
     } else {
