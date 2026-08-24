@@ -1,21 +1,23 @@
 <div class="custom-paginator-container">
   <!-- Left Side -->
   <div class="paginator-left">
-    @if (length > 0) {
-      <span>{{ 'PAG_MOSTRANDO' | translate }} {{rangeStart}} {{ 'PAG_A' | translate }} {{rangeEnd}} {{ 'DE' | translate }} {{length}} {{ 'REGISTROS' | translate }}</span>
+    @if (effectiveLength > 0) {
+      <span>{{ 'PAG_MOSTRANDO' | translate }} {{rangeStart}} {{ 'PAG_A' | translate }} {{rangeEnd}} {{ 'DE' | translate }}
+        {{effectiveLength}} {{ 'REGISTROS' | translate }}</span>
     }
   </div>
 
   <!-- Middle Side -->
   <div class="paginator-middle">
-    <button type="button" class="btn-page-nav" [disabled]="currentPage === 1" (click)="goToPage(1)">
-      «
-    </button>
-    <button type="button" class="btn-page-nav" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
-      ‹
-    </button>
-
-    @if (length > 0) {
+    @if (currentPage > 1) {
+      <button type="button" class="btn-page-nav" [disabled]="currentPage === 1" (click)="goToPage(1)">
+        «
+      </button>
+      <button type="button" class="btn-page-nav" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+        ‹
+      </button>
+    }
+    @if (effectiveLength > 0) {
       @for (page of visiblePages; track page) {
         <button type="button" class="btn-page-num" [class.active]="page === currentPage" (click)="goToPage(page)">
           {{ page }}
@@ -23,12 +25,15 @@
       }
     }
 
-    <button type="button" class="btn-page-nav" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
-      ›
-    </button>
-    <button type="button" class="btn-page-nav" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">
-      »
-    </button>
+    @if (currentPage < totalPages && rangeEnd < effectiveLength) {
+      <button type="button" class="btn-page-nav"
+        (click)="goToPage(currentPage + 1)">
+        ›
+      </button>
+      <button type="button" class="btn-page-nav" (click)="goToPage(totalPages)">
+        »
+      </button>
+    }
   </div>
 
   <!-- Right Side -->
@@ -42,7 +47,7 @@
       </select>
     </div>
     <span class="lbl-page-info">
-      {{ 'PAGINA' | translate }} {{currentPage}} @if (length > 0) { {{ 'DE' | translate }} {{totalPages}} }
+      {{ 'PAGINA' | translate }} {{currentPage}} @if (effectiveLength > 0) { {{ 'DE' | translate }} {{totalPages}} }
     </span>
   </div>
 </div>
