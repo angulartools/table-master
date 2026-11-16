@@ -1,13 +1,11 @@
 {
   "name": "@angulartoolsdr/table-master",
-  "version": "22.2.4",
+  "version": "22.2.6",
   "peerDependencies": {
-    "@angular/common": "22.2.4",
-    "@angular/core": "22.2.4",
-    "@angulartoolsdr/translation": "22.2.4"
-  },
-  "dependencies": {
-    "tslib": "^2.8.1"
+    "@angular/common": "22.2.6",
+    "@angular/core": "22.2.6",
+    "@angular/forms": "22.2.6",
+    "@angulartoolsdr/translation": "22.2.6"
   },
   "sideEffects": false
 }

@@ -1,36 +1,36 @@
 <div class="custom-paginator-container">
   <!-- Left Side -->
   <div class="paginator-left">
-    @if (effectiveLength > 0) {
-      <span>{{ 'PAG_MOSTRANDO' | translate }} {{rangeStart}} {{ 'PAG_A' | translate }} {{rangeEnd}} {{ 'DE' | translate }}
-        {{effectiveLength}} {{ 'REGISTROS' | translate }}</span>
+    @if (effectiveLength() > 0) {
+      <span>{{ 'PAG_MOSTRANDO' | translate }} {{rangeStart()}} {{ 'PAG_A' | translate }} {{rangeEnd()}} {{ 'DE' | translate }}
+        {{effectiveLength()}} {{ 'REGISTROS' | translate }}</span>
     }
   </div>
 
   <!-- Middle Side -->
   <div class="paginator-middle">
-    @if (currentPage > 1) {
-      <button type="button" class="btn-page-nav" [disabled]="currentPage === 1" (click)="goToPage(1)">
+    @if (currentPage() > 1) {
+      <button type="button" class="btn-page-nav" [disabled]="currentPage() === 1" (click)="goToPage(1)">
         «
       </button>
-      <button type="button" class="btn-page-nav" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+      <button type="button" class="btn-page-nav" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
         ‹
       </button>
     }
-    @if (effectiveLength > 0) {
-      @for (page of visiblePages; track page) {
-        <button type="button" class="btn-page-num" [class.active]="page === currentPage" (click)="goToPage(page)">
+    @if (effectiveLength() > 0) {
+      @for (page of visiblePages(); track page) {
+        <button type="button" class="btn-page-num" [class.active]="page === currentPage()" (click)="goToPage(page)">
           {{ page }}
         </button>
       }
     }
 
-    @if (currentPage < totalPages && rangeEnd < effectiveLength) {
+    @if (currentPage() < totalPages() && rangeEnd() < effectiveLength()) {
       <button type="button" class="btn-page-nav"
-        (click)="goToPage(currentPage + 1)">
+        (click)="goToPage(currentPage() + 1)">
         ›
       </button>
-      <button type="button" class="btn-page-nav" (click)="goToPage(totalPages)">
+      <button type="button" class="btn-page-nav" (click)="goToPage(totalPages())">
         »
       </button>
     }
@@ -40,14 +40,14 @@
   <div class="paginator-right">
     <span class="lbl-items">{{ 'ITENS_POR_PAGINA' | translate }}</span>
     <div class="select-items-wrapper">
-      <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)" class="select-page-size">
-        @for (size of pageSizeOptions; track size) {
-          <option [value]="size">{{ size }}</option>
+      <select [ngModel]="effectivePageSize()" (ngModelChange)="onPageSizeChange($event)" class="select-page-size">
+        @for (size of pageSizeOptions(); track size) {
+          <option [ngValue]="size">{{ size }}</option>
         }
       </select>
     </div>
     <span class="lbl-page-info">
-      {{ 'PAGINA' | translate }} {{currentPage}} @if (effectiveLength > 0) { {{ 'DE' | translate }} {{totalPages}} }
+      {{ 'PAGINA' | translate }} {{currentPage()}} @if (effectiveLength() > 0) { {{ 'DE' | translate }} {{totalPages()}} }
     </span>
   </div>
 </div>

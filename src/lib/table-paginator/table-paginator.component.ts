@@ -1,8 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, effect, input, linkedSignal, numberAttribute, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslationPipe } from '@angulartoolsdr/translation';
-import { Observable, Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
 
 interface PageableDataSource<T> {
   connect(): Observable<T[]>;
@@ -10,79 +9,25 @@ interface PageableDataSource<T> {
 
 @Component({
   selector: 'lib-table-paginator',
-  imports: [CommonModule, FormsModule, TranslationPipe],
+  imports: [FormsModule, TranslationPipe],
   templateUrl: './table-paginator.component.html',
-  styleUrls: ['./table-paginator.component.scss']
+  styleUrl: './table-paginator.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TablePaginatorComponent<T> implements OnInit, OnChanges, OnDestroy {
+export class TablePaginatorComponent<T> {
+  readonly length = input(0, { transform: numberAttribute });
+  readonly pageSize = input(10, { transform: numberAttribute });
+  readonly pageSizeOptions = input([5, 10, 20]);
+  readonly items = input<T[] | undefined>();
+  readonly dataSource = input<PageableDataSource<T> | undefined>();
 
-  @Input() length: number = 0;
-  @Input() pageSize: number = 10;
-  @Input() pageSizeOptions: number[] = [5, 10, 20];
-  @Input() items?: T[];
-  @Input()
-  set dataSource(value: PageableDataSource<T> | undefined) {
-    this.dataSourceSubscription?.unsubscribe();
-    this._dataSource = value;
+  readonly page = output<{ pageIndex: number; pageSize: number; length: number }>();
+  readonly pagedItems = output<T[]>();
 
-    if (value) {
-      this.dataSourceSubscription = value.connect().subscribe(items => {
-        this.currentItems = items ?? [];
-        this.refreshPagination();
-      });
-    }
-  }
-
-  @Output() page = new EventEmitter<{ pageIndex: number; pageSize: number; length: number }>();
-  @Output() pagedItems = new EventEmitter<T[]>();
-
-  currentPage: number = 1;
-  private _dataSource?: PageableDataSource<T>;
-  private dataSourceSubscription?: Subscription;
-  private currentItems: T[] = [];
-
-  ngOnInit() {
-    this.refreshPagination();
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['items'] && !this._dataSource) {
-      this.currentItems = this.items ?? [];
-    }
-
-    if (changes['items'] || changes['length'] || changes['pageSize']) {
-      this.refreshPagination();
-    }
-  }
-
-  ngOnDestroy() {
-    this.dataSourceSubscription?.unsubscribe();
-  }
-
-  get effectiveLength(): number {
-    return this._dataSource || this.items !== undefined ? this.currentItems.length : this.length;
-  }
-
-  get totalPages(): number {
-    if (this.effectiveLength === 0 || this.pageSize === 0) return 1;
-    return Math.ceil(this.effectiveLength / this.pageSize);
-  }
-
-  get rangeStart(): number {
-    if (this.effectiveLength === 0) return 0;
-    return (this.currentPage - 1) * this.pageSize + 1;
-  }
-
-  get rangeEnd(): number {
-    const end = this.currentPage * this.pageSize;
-    return end > this.effectiveLength ? this.effectiveLength : end;
-  }
-
-  visiblePages: number[] = [];
-
-  updateVisiblePages() {
-    const total = this.totalPages;
-    const current = this.currentPage;
+  readonly currentPage = signal(1);
+  readonly visiblePages = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
     const maxVisible = 5;
 
     let start = Math.max(1, current - Math.floor(maxVisible / 2));
@@ -92,48 +37,82 @@ export class TablePaginatorComponent<T> implements OnInit, OnChanges, OnDestroy 
       start = Math.max(1, end - maxVisible + 1);
     }
 
-    const pages = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    this.visiblePages = pages;
-  }
+    return Array.from({ length: Math.max(0, end - start + 1) }, (_, index) => start + index);
+  });
 
-  private refreshPagination() {
-    const total = this.totalPages;
-    if (this.currentPage > total) {
-      this.currentPage = Math.max(1, total);
-    }
-    this.updateVisiblePages();
-    this.emitPagedItems();
-  }
+  readonly effectivePageSize = linkedSignal(() => this.pageSize());
+  private readonly currentItems = signal<T[]>([]);
 
-  private emitPagedItems() {
-    const start = (this.currentPage - 1) * this.pageSize;
-    this.pagedItems.emit(this.currentItems.slice(start, start + this.pageSize));
-  }
+  readonly effectiveLength = computed(() =>
+    this.dataSource() || this.items() !== undefined
+      ? this.currentItems().length
+      : this.length()
+  );
+  readonly totalPages = computed(() => {
+    const size = this.effectivePageSize();
+    const length = this.effectiveLength();
+    return length === 0 || size === 0 ? 1 : Math.ceil(length / size);
+  });
+  readonly rangeStart = computed(() =>
+    this.effectiveLength() === 0 ? 0 : (this.currentPage() - 1) * this.effectivePageSize() + 1
+  );
+  readonly rangeEnd = computed(() =>
+    Math.min(this.currentPage() * this.effectivePageSize(), this.effectiveLength())
+  );
 
-  goToPage(page: number) {
-    if (page < 1 || page > this.totalPages) return;
-    this.currentPage = page;
-    this.updateVisiblePages();
-    this.emitPagedItems();
-    this.page.emit({
-      pageIndex: this.currentPage - 1,
-      pageSize: this.pageSize,
-      length: this.effectiveLength
+  constructor() {
+    effect(() => {
+      if (!this.dataSource()) {
+        this.currentItems.set(this.items() ?? []);
+      }
+    });
+
+    effect(onCleanup => {
+      const dataSource = this.dataSource();
+      if (!dataSource) {
+        return;
+      }
+
+      const subscription = dataSource.connect().subscribe(items => {
+        this.currentItems.set(items ?? []);
+      });
+      onCleanup(() => subscription.unsubscribe());
+    });
+
+    effect(() => {
+      const total = this.totalPages();
+      const page = this.currentPage();
+      if (page > total) {
+        this.currentPage.set(Math.max(1, total));
+      }
+    });
+
+    effect(() => {
+      const items = this.currentItems();
+      const start = (this.currentPage() - 1) * this.effectivePageSize();
+      this.pagedItems.emit(items.slice(start, start + this.effectivePageSize()));
     });
   }
 
-  onPageSizeChange(size: any) {
-    this.pageSize = Number(size);
-    this.currentPage = 1;
-    this.updateVisiblePages();
-    this.emitPagedItems();
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+
+    this.currentPage.set(page);
+    this.page.emit({
+      pageIndex: page - 1,
+      pageSize: this.effectivePageSize(),
+      length: this.effectiveLength()
+    });
+  }
+
+  onPageSizeChange(size: number | string) {
+    const pageSize = Number(size);
+    this.effectivePageSize.set(pageSize);
+    this.currentPage.set(1);
     this.page.emit({
       pageIndex: 0,
-      pageSize: this.pageSize,
-      length: this.effectiveLength
+      pageSize,
+      length: this.effectiveLength()
     });
   }
 }
